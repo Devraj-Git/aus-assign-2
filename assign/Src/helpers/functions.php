@@ -82,11 +82,6 @@ if(!function_exists('authenticate')) {
     }
 }
 
-if(!function_exists('user')) {
-    function user() {
-        return new App\Models\Users($_SESSION['user_id']);
-    }
-}
 
 if(!function_exists('now')) {
     function now(string $format = 'Y-m-d H:i:s'): string {
@@ -135,36 +130,5 @@ if(!function_exists('get_action')) {
         $host = $_SERVER['HTTP_HOST'];
         $requestUri = $_SERVER['REQUEST_URI'];
         return $scheme . '://' . $host . $requestUri;
-    }
-}
-
-
-if(!function_exists('log_access')) {
-    function log_access($identifier='Non-logged-in User')
-    {
-        $access_log = new App\Models\AccessLog ;
-        if(isset($_SESSION['user_id'])){
-            $access_log->user_id = $_SESSION['user_id'];
-            $identifier = "Logged-In-User";
-        }
-        if($_SERVER['REQUEST_URI'] === '/403'){
-            $identifier = "Invalid Access";
-        } 
-        $access_log->identifier = $identifier;
-        $access_log->action = get_action();
-        $access_log->ip_address = $_SERVER['REMOTE_ADDR'];
-        $access_log->save();
-    }
-}
-
-if(!function_exists('check_user_access')) {
-    function check_user_access(...$roles){
-        $user_type = user()->user_type()->first()->type;
-        if (!in_array($user_type, $roles)) {
-            return false;
-        }
-        else{
-            return true;
-        }
     }
 }
