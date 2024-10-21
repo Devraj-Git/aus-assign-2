@@ -1,0 +1,14 @@
+{
+    "name": "assignment/one",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        },
+        "files": [
+            "src/helpers/functions.php"
+        ]
+    },
+    "require": {
+        "guzzlehttp/guzzle": "^7.9"
+    }
+}

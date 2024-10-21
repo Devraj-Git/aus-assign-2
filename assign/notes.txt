@@ -1,0 +1,15 @@
+mvc example: 
+    https://github.com/andrejrs/php-mvc-example/blob/master/public/index.php
+
+chatgpt:
+    Discord oauth integration:-
+        https://chatgpt.com/share/66f579ad-70c8-8006-8103-72ee9bcc4b9e
+    Rapidapi testing:-
+        https://chatgpt.com/share/66e5438f-e8dc-8006-abde-f3a20c62076f
+    Different view change issue(table,list,json):-
+        https://chatgpt.com/share/66f57ac5-683c-8006-a834-61ce30a91dd7
+    error through 404 and 403:-
+        https://chatgpt.com/share/66f57b19-6fec-8006-95e5-ff49923d2617
+
+Template:-
+    https://filedash.laborasyon.com/demos/default/
