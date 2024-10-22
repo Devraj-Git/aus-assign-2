@@ -7,6 +7,9 @@ use App\System\Core\Router;
 $router = new Router();
 
 $router->get('/driver', DriverController::class, 'index');
+$router->get('/driver/{id}', DriverController::class, 'index');
+$router->post('/driver', DriverController::class, 'index');
+$router->put('/driver/{id}', DriverController::class, 'index');
 
 
 $router->get('/403', ResponseController::class, '_403');

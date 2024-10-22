@@ -7,12 +7,9 @@ use function PHPSTORM_META\type;
 
 class Controller
 {
-    protected function render($view, $data = [])
+    protected function response($data)
     {
-        if(!empty($data)) {
-            extract($data);
-        }
-        include  BASEPATH . "/src/Views/$view.php";
-
+        header('Content-Type: application/json');
+        echo json_encode($data);
     }
 }
