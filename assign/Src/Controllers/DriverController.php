@@ -13,7 +13,13 @@ class DriverController extends Controller
         if($_SERVER['REQUEST_METHOD'] === 'GET'){
             if($id){
                 $driver = (new Driver)->getDriverWithSkills($id);
-                $this->response($driver);
+                if($driver){
+                    $this->response($driver);
+                }
+                else{
+                    http_response_code(404);
+                    echo "Record with Driver number $id Not Found !!";
+                }
             }
             else{
                 $driver = (new Driver)->getDriverWithSkills();
@@ -26,17 +32,20 @@ class DriverController extends Controller
                 $driver = new Driver;
                 $skillData = json_decode($_POST['skill'], true);
                 if (!isset($skillData['race']) || !isset($skillData['street'])) {
+                    http_response_code(400);
                     echo "Invalid skill data provided.";
                     return;
                 }
                 $race = (int)$skillData['race'];
                 $street = (int)$skillData['street'];
                 if (($race + $street) !== 100) {
+                    http_response_code(400);
                     echo "The sum of race and street must be 100.";
                     return;
                 }
                 $existingDriver = $driver->where('number', $_POST['number'])->first();
                 if ($existingDriver) {
+                    http_response_code(400);
                     echo "Driver with this number already exists.";
                     return;
                 }
@@ -50,10 +59,12 @@ class DriverController extends Controller
                 $skills->race = $race;
                 $skills->street = $street;
                 $skills->save();
+                http_response_code(200);
                 redirect('driver/'.$driver->number);
 
             }
             else{
+                http_response_code(400);
                 echo "All field is required !\n";
                 print_r($_POST);
             }
@@ -69,7 +80,7 @@ class DriverController extends Controller
                     if (isset($_PUT['number'])){
                         $existingDriver = (new Driver)->where('number', $_PUT['number'])->first();
                         if ($existingDriver) {
-                            if ($existingDriver->number !=  $_PUT['number']){
+                            if ($id !=  $_PUT['number']){
                                 echo "Driver with this number already exists.";
                                 return;
                             }
@@ -113,17 +124,38 @@ class DriverController extends Controller
                         $driver->save();
                         $skills->save();
                         $url = config('app_url').'driver/'.$_PUT['number'];
+                        http_response_code(200);
                         header("Location: $url");
                     }
                     else{
+                        http_response_code(400);
                         echo "At least number field is required !";
                         return;
                     }
                 }
                 else{
+                    http_response_code(400);
                     echo "Driver Not Found !!";
                     return;
                 }
+            }
+            else{
+                http_response_code(400);
+                echo "number is required !\n";
+                print_r($_POST);
+            }
+        }
+        if($_SERVER['REQUEST_METHOD'] === 'DELETE'){
+            if($id){
+                (new Driver)->delete(['number' => $id]);
+                (new Skills)->delete(["driver_number"=>$id]);
+                http_response_code(200);
+                echo "Record with Driver number $id deleted successfully.";
+            }
+            else{
+                http_response_code(400);
+                echo "All field is required !\n";
+                print_r($_POST);
             }
         }
     }

@@ -388,8 +388,22 @@ abstract class Models extends DB
      * 
      * @return void
      */
-    public function delete() {
-        $this->query = "DELETE FROM {$this->table} WHERE {$this->pk} = '{$this->{$this->pk}}'";
+    public function delete($options = null) {
+        // Build the base delete query
+        $this->query = "DELETE FROM {$this->table} WHERE ";
+    
+        // If options are provided, use them; otherwise, default to the primary key condition
+        if ($options) {
+            // Assume $options is an associative array like ['column' => 'value']
+            $conditions = [];
+            foreach ($options as $column => $value) {
+                $conditions[] = "{$column} = '{$value}'";
+            }
+            $this->query .= implode(' AND ', $conditions);
+        } else {
+            // Default to primary key if no options are passed
+            $this->query .= "{$this->pk} = '{$this->{$this->pk}}'";
+        }
         $this->run($this->query);
         $this->resetVars();
         $this->setLoaded(false);
