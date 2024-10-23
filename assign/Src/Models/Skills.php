@@ -7,6 +7,7 @@ use App\System\Core\Models;
 /**
  * @property string $id
  * @property string $driver_number
+ * @property string $car_number
  * @property string $race
  * @property string $street
  */
