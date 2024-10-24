@@ -90,7 +90,7 @@ abstract class Models extends DB
      * @param string $column
      * @param string $operator
      * @param string|null $value
-     * @return $this
+     * @return Model
      */
     public function where(string $column, string $operator, ?string $value = null): self
     {
@@ -118,7 +118,7 @@ abstract class Models extends DB
      * @param string $column
      * @param string $operator
      * @param string|null $value
-     * @return void
+     * @return Model
      */
     public function orWhere(string $column, string $operator, ?string $value = null): self
     {
@@ -389,10 +389,7 @@ abstract class Models extends DB
      * @return void
      */
     public function delete($options = null) {
-        // Build the base delete query
         $this->query = "DELETE FROM {$this->table} WHERE ";
-    
-        // If options are provided, use them; otherwise, default to the primary key condition
         if ($options) {
             // Assume $options is an associative array like ['column' => 'value']
             $conditions = [];
@@ -401,7 +398,6 @@ abstract class Models extends DB
             }
             $this->query .= implode(' AND ', $conditions);
         } else {
-            // Default to primary key if no options are passed
             $this->query .= "{$this->pk} = '{$this->{$this->pk}}'";
         }
         $this->run($this->query);

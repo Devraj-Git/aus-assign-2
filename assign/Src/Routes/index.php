@@ -19,7 +19,10 @@ $router->get('/car/{id}', CarController::class, 'index');
 $router->get('/car/{id}/driver', CarController::class, 'car_driver');
 $router->post('/car', CarController::class, 'index');
 $router->put('/car/{id}', CarController::class, 'index');
+$router->put('/car/{id}/driver', CarController::class, 'car_driver');
 $router->delete('/car/{id}', CarController::class, 'index');
+$router->delete('/car/{id}/driver', CarController::class, 'car_driver');
+$router->get('/car/{id}/lap', CarController::class, 'lap');
 
 
 $router->get('/403', ResponseController::class, '_403');

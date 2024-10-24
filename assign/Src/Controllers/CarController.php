@@ -45,14 +45,22 @@ class CarController extends Controller
                     return;
                 }
                 if (isset($_POST['driver'])){
-                    $find_driver = (new Driver)->where('number',$_POST['driver'])->first();
-                    if($find_driver){
-                        $car->driver = $_POST['driver'];
+                    $get_drivers_in_car = (new Car)->where('driver',$_POST['driver'])->first();
+                    if ($get_drivers_in_car) {
+                        http_response_code(400);
+                        echo "This Driver is already assigned to the car ". $get_drivers_in_car->id;
+                        return;
                     }
                     else{
-                        http_response_code(400);
-                        echo "The Driver not found for the number" .$_POST['driver'] ." !!";
-                        return;
+                        $find_driver = (new Driver)->where('number',$_POST['driver'])->first();
+                        if($find_driver){
+                            $car->driver = $_POST['driver'];
+                        }
+                        else{
+                            http_response_code(400);
+                            echo "The Driver not found for the number" .$_POST['driver'] ." !!";
+                            return;
+                        }
                     }
                 }
                 if ($_POST['reliability']>=0 && $_POST['reliability'] <= 100){
@@ -118,7 +126,7 @@ class CarController extends Controller
                     $car->save();
                     
                     $skills = (new Skills)->where('car_number',$id)->first();
-                    $skills->car_number = $car->id;
+                    $skills->car_number = $skills->car_number;
                     if (isset($_PUT['suitability'])){
                         $suitabilityData = $_PUT['suitability'];
                         if (!isset($suitabilityData['race']) || !isset($suitabilityData['street'])) {
@@ -156,15 +164,15 @@ class CarController extends Controller
         }
         if($_SERVER['REQUEST_METHOD'] === 'DELETE'){
             if($id){
-                (new Driver)->delete(['number' => $id]);
-                (new Skills)->delete(["driver_number"=>$id]);
+                (new Car)->delete($id);
+                (new Skills)->delete(["car_number"=>$id]);
                 http_response_code(200);
-                echo "Record with Driver number $id deleted successfully.";
+                echo "Record with Car number $id deleted successfully.";
             }
             else{
                 http_response_code(400);
-                echo "All field is required !\n";
-                print_r($_POST);
+                echo "Id field is required !\n";
+                // print_r($_GET);
             }
         }
     }
@@ -186,6 +194,80 @@ class CarController extends Controller
             else{
                 http_response_code(400);
                 echo "id field is required !\n";
+            }
+        }
+        if($_SERVER['REQUEST_METHOD'] === 'PUT'){
+            if($id){
+                $car = (new Car)->where('id',$id)->first();
+                if($car){
+                    $inputData = file_get_contents("php://input");
+                    // echo $inputData;
+                    $_PUT = json_decode($inputData, true);
+                    // print_r($_PUT);
+                    if (isset($_PUT['driver'])){
+                        $get_drivers_in_car = (new Car)->where('driver',$_PUT['driver'])->Where('id','!=',$id)->first();
+                        if ($get_drivers_in_car) {
+                            http_response_code(400);
+                            echo "This Driver is already assigned to another car.";
+                            // print_r($get_drivers_in_car);
+                            return;
+                        }
+                        else{
+                            $find_driver = (new Driver)->where('number',$_PUT['driver'])->first();
+                            if($find_driver){
+                                $car->driver = $_PUT['driver'];
+                            }
+                            else{
+                                http_response_code(400);
+                                echo "The Driver not found for the number " .$_PUT['driver'] ." !!";
+                                return;
+                            }
+                        }
+                    }
+                    else{
+                        $car->driver = $car->driver;
+                    }
+                    $car->save();
+                    http_response_code(200);
+                    redirect(url('car/'.$id));
+                }
+                else{
+                    http_response_code(400);
+                    echo "Driver Not Found !!";
+                    return;
+                }
+            }
+            else{
+                http_response_code(400);
+                echo "number is required !\n";
+                print_r($_POST);
+            }
+        }
+        if($_SERVER['REQUEST_METHOD'] === 'DELETE'){
+            if($id){
+                $driver_del = new Car($id);
+                $driver_del->driver = null;
+                $driver_del->save();
+                http_response_code(200);
+                echo "Record of driver with Car number $id deleted successfully.";
+            }
+            else{
+                http_response_code(400);
+                echo "Id field is required !\n";
+                // print_r($_GET);
+            }
+        }
+    }
+
+    public function lap($id=null)
+    {
+        if($_SERVER['REQUEST_METHOD'] === 'GET'){
+            if($id){
+              echo "Do it later !!";
+            }
+            else{
+                http_response_code(400);
+                echo "Id field is required !\n";
             }
         }
     }
