@@ -164,7 +164,7 @@ class CarController extends Controller
         }
         if($_SERVER['REQUEST_METHOD'] === 'DELETE'){
             if($id){
-                (new Car)->delete($id);
+                (new Car($id))->delete();
                 (new Skills)->delete(["car_number"=>$id]);
                 http_response_code(200);
                 echo "Record with Car number $id deleted successfully.";

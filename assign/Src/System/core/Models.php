@@ -390,7 +390,7 @@ abstract class Models extends DB
      */
     public function delete($options = null) {
         $this->query = "DELETE FROM {$this->table} WHERE ";
-        if ($options) {
+        if (is_array($options)) {
             // Assume $options is an associative array like ['column' => 'value']
             $conditions = [];
             foreach ($options as $column => $value) {

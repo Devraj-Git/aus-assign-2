@@ -14,4 +14,5 @@ use App\System\Core\Models;
 class Track extends Models
 {
     protected string $table = 'track';
+    protected string $pk = 'id';
 }
