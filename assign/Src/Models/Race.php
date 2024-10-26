@@ -7,7 +7,7 @@ use App\System\Core\Models;
 /**
  * @property string $id
  * @property string $track
- * @property string $entrant
+ * @property string $entrants
  * @property string $startingPositions
  * @property string $laps
  */
