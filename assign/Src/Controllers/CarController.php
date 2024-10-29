@@ -291,7 +291,7 @@ class CarController extends Controller
                         $result = [
                             'time'=>$lap_time,
                             'randomness'=>$randomness,
-                            "crashed"=> $crashes
+                            "crashed"=> $crashes ? 'true' : 'false'
                         ];
                         $this->response($result);
                     }
