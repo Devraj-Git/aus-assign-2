@@ -14,4 +14,8 @@ use App\System\Core\Models;
 class Race extends Models
 {
     protected string $table = 'race';
+
+    public function tracks() {
+        return $this->relation(Track::class, 'track', 'id', 'child', 'track');
+    }
 }

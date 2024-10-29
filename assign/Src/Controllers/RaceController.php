@@ -255,37 +255,49 @@ class RaceController extends Controller
                         return;
                     }
                     if(!empty($Race->startingPositions)){
-                        $client = new Client();
                         $find_number = (new Lap)->select('number')->where('race_id',$id)->get();
                         $number = $find_number ? max(array_map(fn($max) => $max->number, $find_number))+1 : 0;
-                        $entrant = 0;
-                        $currentEntrants =json_decode($Race->entrants, true);
-                        foreach($currentEntrants as $cars){
-                            $lap_url = $cars.'/lap';
-                            try {
-                                $get_type_baselap = (new Track($Race->track))->select('type','baseLapTime')->first();
-                                $response = $client->request('GET', $lap_url, [
-                                    'query' => [
-                                        'baseLapTime' => $get_type_baselap->baseLapTime,
-                                        'trackType' => $get_type_baselap->type
-                                    ]
-                                ]);
-                                $body = $response->getBody()->getContents();
-                                $data = json_decode($body, true);
-                                
-                                $lap = new Lap;                                
-                                $lap->race_id = $id;
-                                $lap->number = $number;
-                                $lap->entrant = $entrant;
-                                $lap->time =$data['time']+$data['randomness'];
-                                $lap->crashed = $data['crashed'];
-                                $lap->save();                          
-                                $entrant += 1;
-                            } catch (\Exception $e) {
-                                http_response_code(404);
-                                echo "Error: " . $e->getMessage();
-                                return;
+                        if($number < $Race->tracks()->first()->laps){
+                            $entrant = 0;
+                            $client = new Client();
+                            $currentEntrants =json_decode($Race->entrants, true);
+                            foreach($currentEntrants as $cars){
+                                $check_crashed_or_not = (new Lap)->where('race_id',$id)->where('entrant',$entrant)->where('crashed','true')->first();
+                                if($check_crashed_or_not){
+                                    $entrant += 1;
+                                    continue;
+                                }
+                                $lap_url = $cars.'/lap';
+                                try {
+                                    $get_type_baselap = (new Track($Race->track))->select('type','baseLapTime')->first();
+                                    $response = $client->request('GET', $lap_url, [
+                                        'query' => [
+                                            'baseLapTime' => $get_type_baselap->baseLapTime,
+                                            'trackType' => $get_type_baselap->type
+                                        ]
+                                    ]);
+                                    $body = $response->getBody()->getContents();
+                                    $data = json_decode($body, true);
+                                    
+                                    $lap = new Lap;                                
+                                    $lap->race_id = $id;
+                                    $lap->number = $number;
+                                    $lap->entrant = $entrant;
+                                    $lap->time =$data['time']+$data['randomness'];
+                                    $lap->crashed = $data['crashed'];
+                                    $lap->save();                          
+                                    $entrant += 1;
+                                } catch (\Exception $e) {
+                                    http_response_code(404);
+                                    echo "Error: " . $e->getMessage();
+                                    return;
+                                }
                             }
+                        }
+                        else{
+                            http_response_code(404);
+                            echo "Laps have been Completed.";
+                            return;
                         }
                     }
                     else{
