@@ -3,11 +3,9 @@
 namespace App\Controllers;
 
 use App\System\Core\Controller;
-// use App\Models\Car;
-// use App\Models\Driver;
 use App\Models\Skills;
 use App\Models\Race;
-
+use App\Models\Track;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 
@@ -159,43 +157,74 @@ class RaceController extends Controller
             if($id){
                 $Race = (new Race)->where('id',$id)->first();
                 if($Race){
-                    if(empty($Race->entrants)){
+                    if(empty($Race->startingPositions)){
+                        if(empty($Race->entrants)){
+                            http_response_code(404);
+                            echo "No Entrants for Qualify !!";
+                            return;
+                        }
+                        $currentEntrants =json_decode($Race->entrants, true);
+                        $track = (new Track($Race->track))->select('type')->first()->type;
+                        $skill = [];
+                        foreach($currentEntrants as $cars){
+                            $client = new Client();
+                            try {
+                                $response = $client->get($cars);
+                                $body = $response->getBody()->getContents();
+                                $data = json_decode($body, true);
+                                $driver_uri = null;
+                                if (json_last_error() === JSON_ERROR_NONE) {
+                                    foreach ($data as $entry) {
+                                        $driver_uri = $entry['driver']['uri'];
+                                    }
+                                } else {
+                                    http_response_code(404);
+                                    echo "Response Error From Cars API(Teams) decoding JSON: " . json_last_error_msg();
+                                    return;
+                                }
+                                if($driver_uri){
+                                    $response_dri = $client->get($driver_uri);
+                                    $body_dri = $response_dri->getBody()->getContents();
+                                    $data_dri = json_decode($body_dri, true);
+                                    if (json_last_error() === JSON_ERROR_NONE) {
+                                        foreach ($data_dri as $entry_dri) {
+                                            $skill [] = $entry_dri['skill'][$track];
+                                        }
+                                    } else {
+                                        http_response_code(404);
+                                        echo "Response Error From Driver API(Teams) decoding JSON: " . json_last_error_msg();
+                                        return;
+                                    }
+                                }
+                                else{
+                                    http_response_code(404);
+                                    echo "driver_uri missing !!";
+                                    return;
+                                }
+                            
+                            } catch (\Exception $e) {
+                                http_response_code(404);
+                                echo "Error: " . $e->getMessage();
+                                return;
+                            }
+                            
+                        }
+                        $sortedSkill = $skill;
+                        arsort($sortedSkill);
+                        $output = [];
+                        foreach ($skill as $key => $value) {
+                            $output[$key] = array_search($value, array_values($sortedSkill));
+                        }
+                        $Race->startingPositions = json_encode(array_values($output));
+                        $Race->save();
+                        http_response_code(200);
+                        redirect(url('race/'.$id));
+                    }
+                    else{
                         http_response_code(404);
-                        echo "No Entrants for Qualify !!";
+                        echo "The startingPositions have already been populated";
                         return;
                     }
-                    $currentEntrants =json_decode($Race->entrants, true);
-                    print_r($currentEntrants);
-                    foreach($currentEntrants as $cars){
-                        echo($cars);
-                        $car = new Client();
-                        $response = $car->get($cars);
-                        echo $response->getBody();
-                        // try {
-                        //     $response = $car->request('GET', $cars, [
-                        //         'query' => [],
-                        //         'timeout' => 2
-                        //     ]);
-                        
-                        //     $body = $response->getBody()->getContents();
-                        //     echo "GET Response: " . $body;
-                        
-                        // } catch (GuzzleException $e) {
-                        //     echo "Error: " . $e->getMessage();
-                        // }
-                        
-                    }
-                    // if(!empty($Race->startingPositions)){
-                    //     http_response_code(404);
-                    //     echo "The startingPositions have already been populated";
-                    //     return;
-                    // }
-                    // $startingPositions = [];
-                    // $Race->entrants = json_encode(array_values($startingPositions));
-                    // $Race->save();
-                    // http_response_code(200);
-                    // redirect(url('race/'.$Race->id));
-
                 }
                 else{
                     http_response_code(404);
