@@ -3,9 +3,9 @@
 namespace App\Controllers;
 
 use App\System\Core\Controller;
-use App\Models\Skills;
 use App\Models\Race;
 use App\Models\Track;
+use App\Models\Lap;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 
@@ -166,8 +166,8 @@ class RaceController extends Controller
                         $currentEntrants =json_decode($Race->entrants, true);
                         $track = (new Track($Race->track))->select('type')->first()->type;
                         $skill = [];
+                        $client = new Client();
                         foreach($currentEntrants as $cars){
-                            $client = new Client();
                             try {
                                 $response = $client->get($cars);
                                 $body = $response->getBody()->getContents();
@@ -234,11 +234,71 @@ class RaceController extends Controller
             } 
         }
     }
-    public function lap($id=null)
+    public function race_lap($id=null)
     {
         if($_SERVER['REQUEST_METHOD'] === 'GET'){
             if($id){
               echo "Do it later !!";
+            }
+            else{
+                http_response_code(400);
+                echo "Id field is required !\n";
+            }
+        }
+        if($_SERVER['REQUEST_METHOD'] === 'POST'){
+            if($id){
+                $Race = (new Race)->where('id',$id)->first();
+                if($Race){
+                    if(empty($Race->entrants)){
+                        http_response_code(404);
+                        echo "No Entrants for Qualify !!";
+                        return;
+                    }
+                    if(!empty($Race->startingPositions)){
+                        $client = new Client();
+                        $find_number = (new Lap)->select('number')->where('race_id',$id)->get();
+                        $number = $find_number ? max(array_map(fn($max) => $max->number, $find_number))+1 : 0;
+                        $entrant = 0;
+                        $currentEntrants =json_decode($Race->entrants, true);
+                        foreach($currentEntrants as $cars){
+                            $lap_url = $cars.'/lap';
+                            try {
+                                $get_type_baselap = (new Track($Race->track))->select('type','baseLapTime')->first();
+                                $response = $client->request('GET', $lap_url, [
+                                    'query' => [
+                                        'baseLapTime' => $get_type_baselap->baseLapTime,
+                                        'trackType' => $get_type_baselap->type
+                                    ]
+                                ]);
+                                $body = $response->getBody()->getContents();
+                                $data = json_decode($body, true);
+                                
+                                $lap = new Lap;                                
+                                $lap->race_id = $id;
+                                $lap->number = $number;
+                                $lap->entrant = $entrant;
+                                $lap->time =$data['time']+$data['randomness'];
+                                $lap->crashed = $data['crashed'];
+                                $lap->save();                          
+                                $entrant += 1;
+                            } catch (\Exception $e) {
+                                http_response_code(404);
+                                echo "Error: " . $e->getMessage();
+                                return;
+                            }
+                        }
+                    }
+                    else{
+                        http_response_code(404);
+                        echo "The startingPositions have not been populated yet.";
+                        return;
+                    }
+                }
+                else{
+                    http_response_code(404);
+                    echo "Record with Race id $id Not Found !!";
+                    return;
+                } 
             }
             else{
                 http_response_code(400);
