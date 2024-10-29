@@ -5,6 +5,6 @@ $config = [
     'db_name' => 'assign2',
     'db_user' => 'root',
     'db_pass' => 'root',
-    'app_url' => 'http://127.0.0.1:7000/assign/',
+    'app_url' => 'http://127.0.0.1:8080/assign/',
     'debug' => true,
 ];

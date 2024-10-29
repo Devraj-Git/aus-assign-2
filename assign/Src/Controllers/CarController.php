@@ -233,7 +233,7 @@ class CarController extends Controller
                 }
                 else{
                     http_response_code(400);
-                    echo "Driver Not Found !!";
+                    echo "Car Not Found !!";
                     return;
                 }
             }
@@ -263,7 +263,49 @@ class CarController extends Controller
     {
         if($_SERVER['REQUEST_METHOD'] === 'GET'){
             if($id){
-              echo "Do it later !!";
+                $car = (new Car)->where('id',$id)->first();
+                if($car){
+                    if (isset($_GET['baseLapTime']) && isset($_GET['trackType'])){
+                        $baseLapTime = $_GET['baseLapTime'];
+                        $trackType = $_GET['trackType'];
+                        $crashes = false;
+                        $randomness = number_format(rand(0, 5000) / 1000, 3);
+
+                        if($trackType == 'street'){
+                            $rand_no = rand(0, $car->reliability) + 10;
+                        }
+                        elseif($trackType == 'race'){
+                            $rand_no = rand(0, $car->reliability) + 5;
+                        }
+                        if($rand_no > $car->reliability){
+                            $lap_time = 0;
+                            $crashes = true;
+                        }
+                        else{
+                            $suitability = $car->skills()->first()->$trackType;
+                            $driver_skill = $car->drivers()->first()->$trackType;
+                            $reliability_factor = 100 - (int)$car->reliability;
+                            $speed = ((int)$suitability + (int)$driver_skill + $reliability_factor)/3;
+                            $lap_time = number_format($baseLapTime + 10 * $speed/100,1);
+                        }
+                        $result = [
+                            'time'=>$lap_time,
+                            'randomness'=>$randomness,
+                            "crashed"=> $crashes
+                        ];
+                        $this->response($result);
+                    }
+                    else{
+                        http_response_code(400);
+                        echo "baseLapTime and trackType fields are required !\n";
+                        return;
+                    }
+                }
+                else{
+                    http_response_code(400);
+                    echo "Car Not Found !!";
+                    return;
+                }
             }
             else{
                 http_response_code(400);

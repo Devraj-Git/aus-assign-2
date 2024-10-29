@@ -14,6 +14,13 @@ class Car extends Models
 {
     protected string $table = 'car';
 
+    public function skills() {
+        return $this->relation(Skills::class, 'skill', 'car_number', 'child', 'id');
+    }
+    public function drivers() {
+        return $this->relation(Skills::class, 'skill', 'driver_number', 'child', 'driver');
+    }
+
     public function getcarWithSuitability(int $carId = null) {
         if ($carId) {
             $cars =  $this->where('id', $carId)->get();
