@@ -3,10 +3,13 @@
 namespace App\Controllers;
 
 use App\System\Core\Controller;
-use App\Models\Car;
-use App\Models\Driver;
+// use App\Models\Car;
+// use App\Models\Driver;
 use App\Models\Skills;
 use App\Models\Race;
+
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 
 class RaceController extends Controller
 {
@@ -59,18 +62,18 @@ class RaceController extends Controller
         if($_SERVER['REQUEST_METHOD'] === 'POST'){
             if (isset($_POST['Car_URI'])){
                 $carUri = $_POST['Car_URI'];
-                if (preg_match('/car\/(\d+)$/', $carUri, $matches)) {
-                    $carNumber = $matches[1];
-                    if(!(new Car)->where('id',$carNumber)->first()){
-                        http_response_code(400);
-                        echo "Record with Car id $carNumber Not Found !!";
-                        return;
-                    }
-                } else {
-                    http_response_code(400);
-                    echo "The Car_URI should end with 'car/{number}' pattern.\n";
-                    return;
-                }
+                // if (preg_match('/car\/(\d+)$/', $carUri, $matches)) {
+                //     $carNumber = $matches[1];
+                //     if(!(new Car)->where('id',$carNumber)->first()){
+                //         http_response_code(400);
+                //         echo "Record with Car id $carNumber Not Found !!";
+                //         return;
+                //     }
+                // } else {
+                //     http_response_code(400);
+                //     echo "The Car_URI should end with 'car/{number}' pattern.\n";
+                //     return;
+                // }
                 if($id){
                     $Race = (new Race)->where('id',$id)->first();
                     if($Race){
@@ -150,6 +153,58 @@ class RaceController extends Controller
         }
     }
 
+    public function race_qualify($id=null)
+    {
+        if($_SERVER['REQUEST_METHOD'] === 'POST'){
+            if($id){
+                $Race = (new Race)->where('id',$id)->first();
+                if($Race){
+                    if(empty($Race->entrants)){
+                        http_response_code(404);
+                        echo "No Entrants for Qualify !!";
+                        return;
+                    }
+                    $currentEntrants =json_decode($Race->entrants, true);
+                    print_r($currentEntrants);
+                    foreach($currentEntrants as $cars){
+                        echo($cars);
+                        $car = new Client();
+                        $response = $car->get($cars);
+                        echo $response->getBody();
+                        // try {
+                        //     $response = $car->request('GET', $cars, [
+                        //         'query' => [],
+                        //         'timeout' => 2
+                        //     ]);
+                        
+                        //     $body = $response->getBody()->getContents();
+                        //     echo "GET Response: " . $body;
+                        
+                        // } catch (GuzzleException $e) {
+                        //     echo "Error: " . $e->getMessage();
+                        // }
+                        
+                    }
+                    // if(!empty($Race->startingPositions)){
+                    //     http_response_code(404);
+                    //     echo "The startingPositions have already been populated";
+                    //     return;
+                    // }
+                    // $startingPositions = [];
+                    // $Race->entrants = json_encode(array_values($startingPositions));
+                    // $Race->save();
+                    // http_response_code(200);
+                    // redirect(url('race/'.$Race->id));
+
+                }
+                else{
+                    http_response_code(404);
+                    echo "Record with Race id $id Not Found !!";
+                    return;
+                }    
+            } 
+        }
+    }
     public function lap($id=null)
     {
         if($_SERVER['REQUEST_METHOD'] === 'GET'){
