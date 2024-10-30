@@ -24,9 +24,9 @@ $router->get('/race/{id}/entrant', RaceController::class, 'race_entrant');
 $router->post('/race/{id}/entrant', RaceController::class, 'race_entrant');    
 $router->delete('/race/{id}/entrant', RaceController::class, 'race_entrant');
 $router->post('/race/{id}/qualify', RaceController::class, 'race_qualify');
-
 $router->get('/race/{id}/lap', RaceController::class, 'race_lap');
 $router->post('/race/{id}/lap', RaceController::class, 'race_lap');
+
 $router->get('/race/{id}/lap/{number}', RaceController::class, 'lap_leaderboard');
 $router->get('/race/{id}/leaderboard', RaceController::class, 'lap_leaderboard');
 

@@ -238,7 +238,16 @@ class RaceController extends Controller
     {
         if($_SERVER['REQUEST_METHOD'] === 'GET'){
             if($id){
-              echo "Do it later !!";
+                $Race = (new Race)->where('id',$id)->first();
+                if($Race){
+                    $laps = (new Lap)->where('race_id',$id)->get();
+                    $this->response($laps);
+                }
+                else{
+                    http_response_code(404);
+                    echo "Record with Race id $id Not Found !!";
+                    return;
+                } 
             }
             else{
                 http_response_code(400);
@@ -286,12 +295,12 @@ class RaceController extends Controller
                                     $lap->time =$data['time']+$data['randomness'];
                                     $lap->crashed = $data['crashed'];
                                     $lap->save();                          
-                                    $entrant += 1;
                                 } catch (\Exception $e) {
                                     http_response_code(404);
                                     echo "Error: " . $e->getMessage();
                                     return;
                                 }
+                                $entrant += 1;
                             }
                         }
                         else{
@@ -316,6 +325,74 @@ class RaceController extends Controller
                 http_response_code(400);
                 echo "Id field is required !\n";
             }
+        }
+    }
+
+    public function lap_leaderboard($id=null,$number=null)
+    {
+        if($_SERVER['REQUEST_METHOD'] === 'GET'){
+            if($id){
+                $Race = (new Race)->where('id',$id)->first();
+                if($Race){
+                    if($number){
+                        $lap_number = $number;
+                        $client = new Client();
+                        $currentEntrants =json_decode($Race->entrants, true);
+                        $entrants_output = [];
+                        $entrant = 0;
+                        foreach($currentEntrants as $cars){
+                            try {
+                                $response = $client->get($cars);
+                                $body = $response->getBody()->getContents();
+                                $data = json_decode($body, true);
+
+                                $driver_uri = $data[0]['driver']['uri'];
+                                $response_dri = $client->get($driver_uri);
+                                $body_dri = $response_dri->getBody()->getContents();
+                                $data_dri = json_decode($body_dri, true);
+
+                                $startingPositions =json_decode($Race->startingPositions, true);
+                                $time = $startingPositions[$entrant]*5;
+                                $laps = (new Lap)->select('time')->where('race_id',$id)->where('entrant',$entrant)->where('crashed','false')->get();
+                                foreach($laps as $lap){
+                                    $time += $lap->time;
+                                }
+                                $entrants_output[0]=[
+                                    'number' => $data_dri[0]['number'],
+                                    'shortName' => $data_dri[0]['shortName'],
+                                    'name' => $data_dri[0]['name'],
+                                    'uri' => $cars,
+                                    'laps' => count($laps),
+                                    'time' => $time,
+                                ];
+                                print_r($entrants_output);
+                            
+                            } catch (\Exception $e) {
+                                http_response_code(404);
+                                echo "Error: " . $e->getMessage();
+                                return;
+                            }
+                            $entrant += 1;
+
+                        }
+
+                    }
+                    else{
+                        echo "leaderboard.";                    
+                    }
+                }
+                else{
+                    http_response_code(404);
+                    echo "Record with Race id $id Not Found !!";
+                    return;
+                }
+            }
+            else{
+                http_response_code(400);
+                echo "Id field is required !\n";
+                return;
+            }
+
         }
     }
 }
