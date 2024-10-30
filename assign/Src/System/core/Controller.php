@@ -11,6 +11,10 @@ class Controller
     {
         header('Content-Type: application/json');
         http_response_code(200);
-        echo json_encode($data, JSON_UNESCAPED_SLASHES);
+        $response = [
+            "code" => 200,
+            "result" => $data
+        ];
+        echo json_encode($response, JSON_UNESCAPED_SLASHES);
     }
 }

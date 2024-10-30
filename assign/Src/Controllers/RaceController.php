@@ -334,52 +334,70 @@ class RaceController extends Controller
             if($id){
                 $Race = (new Race)->where('id',$id)->first();
                 if($Race){
-                    if($number){
-                        $lap_number = $number;
-                        $client = new Client();
-                        $currentEntrants =json_decode($Race->entrants, true);
-                        $entrants_output = [];
-                        $entrant = 0;
-                        foreach($currentEntrants as $cars){
-                            try {
-                                $response = $client->get($cars);
-                                $body = $response->getBody()->getContents();
-                                $data = json_decode($body, true);
+                    $lap_number = $number;
+                    $client = new Client();
+                    $currentEntrants =json_decode($Race->entrants, true);
+                    $entrants_output = [];
+                    $entrant = 0;
+                    foreach($currentEntrants as $cars){
+                        try {
+                            $response = $client->get($cars);
+                            $body = $response->getBody()->getContents();
+                            $data = json_decode($body, true);
 
-                                $driver_uri = $data[0]['driver']['uri'];
-                                $response_dri = $client->get($driver_uri);
-                                $body_dri = $response_dri->getBody()->getContents();
-                                $data_dri = json_decode($body_dri, true);
+                            $driver_uri = $data[0]['driver']['uri'];
+                            $response_dri = $client->get($driver_uri);
+                            $body_dri = $response_dri->getBody()->getContents();
+                            $data_dri = json_decode($body_dri, true);
 
-                                $startingPositions =json_decode($Race->startingPositions, true);
-                                $time = $startingPositions[$entrant]*5;
-                                $laps = (new Lap)->select('time')->where('race_id',$id)->where('entrant',$entrant)->where('crashed','false')->get();
-                                foreach($laps as $lap){
-                                    $time += $lap->time;
+                            $startingPositions =json_decode($Race->startingPositions, true);
+                            $time = $startingPositions[$entrant]*5;
+                            $laps = (new Lap)->select('time')->where('race_id',$id)->where('entrant',$entrant)->where('crashed','false')->get();
+                            $count_laps = count($laps);
+                            if($number){
+                                $laps = (new Lap)->select('time')->where('race_id',$id)->where('entrant',$entrant)->where('number',$number)->where('crashed','false')->get();
+                                if(!$laps){
+                                    $time = 0;
                                 }
-                                $entrants_output[0]=[
-                                    'number' => $data_dri[0]['number'],
-                                    'shortName' => $data_dri[0]['shortName'],
-                                    'name' => $data_dri[0]['name'],
-                                    'uri' => $cars,
-                                    'laps' => count($laps),
-                                    'time' => $time,
-                                ];
-                                print_r($entrants_output);
-                            
-                            } catch (\Exception $e) {
-                                http_response_code(404);
-                                echo "Error: " . $e->getMessage();
-                                return;
                             }
-                            $entrant += 1;
-
+                            foreach($laps as $lap){
+                                $time += $lap->time;
+                            }
+                            $entrants_output[$entrant]=[
+                                'number' => $data_dri[0]['number'],
+                                'shortName' => $data_dri[0]['shortName'],
+                                'name' => $data_dri[0]['name'],
+                                'uri' => $cars,
+                                'laps' => $count_laps,
+                                'time' => ($count_laps == 0) ? 0 : $time,
+                            ];
+                        
+                        } catch (\Exception $e) {
+                            http_response_code(404);
+                            echo "Error: " . $e->getMessage();
+                            return;
                         }
+                        $entrant += 1;
 
+                    }
+                    usort($entrants_output, function($a, $b) {
+                        if ($a['laps'] != $b['laps']) {
+                            return $b['laps'] - $a['laps'];
+                        }
+                        return $a['time'] <=> $b['time'];
+                    });
+                    if($number){
+                        $formatted_output = [
+                            "lap" => 3,
+                            "entrants" => $entrants_output
+                        ];
                     }
                     else{
-                        echo "leaderboard.";                    
+                        $formatted_output = [
+                            "entrants" => $entrants_output
+                        ];
                     }
+                    $this->response($formatted_output);               
                 }
                 else{
                     http_response_code(404);
