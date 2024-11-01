@@ -9,6 +9,10 @@ use App\Models\Skills;
 
 class CarController extends Controller
 {
+    public function __construct() {
+        $this->checkAuth();
+    }
+
     public function index($id=null)
     {
         if($_SERVER['REQUEST_METHOD'] === 'GET'){
@@ -18,8 +22,7 @@ class CarController extends Controller
                     $this->response($car);
                 }
                 else{
-                    http_response_code(404);
-                    echo "Record with car number $id Not Found !!";
+                    $this->error_400('Record with car number'. $id .'Not Found !!');
                 }
             }
             else{
@@ -33,23 +36,17 @@ class CarController extends Controller
                 $car = new Car;
                 $suitabilityData = json_decode($_POST['suitability'], true);
                 if (!isset($suitabilityData['race']) || !isset($suitabilityData['street'])) {
-                    http_response_code(400);
-                    echo "Invalid suitability data provided.";
-                    return;
+                    $this->error_400('Invalid suitability data provided.');
                 }
                 $race = (int)$suitabilityData['race'];
                 $street = (int)$suitabilityData['street'];
                 if (($race + $street) !== 100) {
-                    http_response_code(400);
-                    echo "The sum of race and street must be 100.";
-                    return;
+                    $this->error_400('The sum of race and street must be 100.');
                 }
                 if (isset($_POST['driver'])){
                     $get_drivers_in_car = (new Car)->where('driver',$_POST['driver'])->first();
                     if ($get_drivers_in_car) {
-                        http_response_code(400);
-                        echo "This Driver is already assigned to the car ". $get_drivers_in_car->id;
-                        return;
+                        $this->error_400("This Driver is already assigned to the car ". $get_drivers_in_car->id);
                     }
                     else{
                         $find_driver = (new Driver)->where('number',$_POST['driver'])->first();
@@ -57,9 +54,7 @@ class CarController extends Controller
                             $car->driver = $_POST['driver'];
                         }
                         else{
-                            http_response_code(400);
-                            echo "The Driver not found for the number" .$_POST['driver'] ." !!";
-                            return;
+                            $this->error_400("The Driver not found for the number" .$_POST['driver'] ." !!");
                         }
                     }
                 }
@@ -67,9 +62,7 @@ class CarController extends Controller
                     $car->reliability = $_POST['reliability'];
                 }
                 else{
-                    http_response_code(400);
-                    echo "The car reliability must be between 0 and 100.";
-                    return;
+                    $this->error_400("The car reliability must be between 0 and 100.");
                 }
                 $car->save();
 
@@ -83,9 +76,7 @@ class CarController extends Controller
 
             }
             else{
-                http_response_code(400);
-                echo "Suitability and Reliability field are required !\n";
-                print_r($_POST);
+                $this->error_400("Suitability and Reliability field are required !");
             }
         }
         if($_SERVER['REQUEST_METHOD'] === 'PUT'){
@@ -101,9 +92,7 @@ class CarController extends Controller
                             $car->reliability = $_PUT['reliability'];
                         }
                         else{
-                            http_response_code(400);
-                            echo "The car reliability must be between 0 and 100.";
-                            return;
+                            $this->error_400("The car reliability must be between 0 and 100.");
                         }
                     }
                     else{
@@ -115,9 +104,7 @@ class CarController extends Controller
                             $car->driver = $_PUT['driver'];
                         }
                         else{
-                            http_response_code(400);
-                            echo "The Driver not found for the number" .$_PUT['driver'] ." !!";
-                            return;
+                            $this->error_400("The Driver not found for the number" .$_PUT['driver'] ." !!");
                         }
                     }
                     else{
@@ -130,14 +117,12 @@ class CarController extends Controller
                     if (isset($_PUT['suitability'])){
                         $suitabilityData = $_PUT['suitability'];
                         if (!isset($suitabilityData['race']) || !isset($suitabilityData['street'])) {
-                            echo "Invalid suitability data provided.";
-                            return;
+                            $this->error_400("Invalid suitability data provided.");
                         }
                         $race = (int)$suitabilityData['race'];
                         $street = (int)$suitabilityData['street'];
                         if (($race + $street) !== 100) {
-                            echo "The sum of race and street must be 100.";
-                            return;
+                            $this->error_400("The sum of race and street must be 100.");
                         }   
                         $skills->race = $race;
                         $skills->street = $street;
@@ -151,28 +136,22 @@ class CarController extends Controller
                     redirect(url('car/'.$id));
                 }
                 else{
-                    http_response_code(400);
-                    echo "Driver Not Found !!";
-                    return;
+                    $this->error_400('Driver Not Found !!');
                 }
             }
             else{
-                http_response_code(400);
-                echo "number is required !\n";
-                print_r($_POST);
+                $this->error_400('number field is required !!');
             }
         }
         if($_SERVER['REQUEST_METHOD'] === 'DELETE'){
             if($id){
                 (new Car($id))->delete();
                 (new Skills)->delete(["car_number"=>$id]);
-                http_response_code(200);
-                echo "Record with Car number $id deleted successfully.";
+                $this->response("Record with Car number $id deleted successfully.");
+
             }
             else{
-                http_response_code(400);
-                echo "Id field is required !\n";
-                // print_r($_GET);
+                $this->error_404("Id field is required !\n");
             }
         }
     }
@@ -187,13 +166,11 @@ class CarController extends Controller
                     redirect(url('driver/'.$car->driver));
                 }
                 else{
-                    http_response_code(404);
-                    echo "Record with Driver number $id Not Found !!";
+                    $this->error_404("Record with Driver number $id Not Found !!");
                 }
             }
             else{
-                http_response_code(400);
-                echo "id field is required !\n";
+                $this->error_400("id field is required !\n");
             }
         }
         if($_SERVER['REQUEST_METHOD'] === 'PUT'){
@@ -201,16 +178,11 @@ class CarController extends Controller
                 $car = (new Car)->where('id',$id)->first();
                 if($car){
                     $inputData = file_get_contents("php://input");
-                    // echo $inputData;
                     $_PUT = json_decode($inputData, true);
-                    // print_r($_PUT);
                     if (isset($_PUT['driver'])){
                         $get_drivers_in_car = (new Car)->where('driver',$_PUT['driver'])->Where('id','!=',$id)->first();
                         if ($get_drivers_in_car) {
-                            http_response_code(400);
-                            echo "This Driver is already assigned to another car.";
-                            // print_r($get_drivers_in_car);
-                            return;
+                            $this->error_400("This Driver is already assigned to another car.");
                         }
                         else{
                             $find_driver = (new Driver)->where('number',$_PUT['driver'])->first();
@@ -218,9 +190,7 @@ class CarController extends Controller
                                 $car->driver = $_PUT['driver'];
                             }
                             else{
-                                http_response_code(400);
-                                echo "The Driver not found for the number " .$_PUT['driver'] ." !!";
-                                return;
+                                $this->error_400("The Driver not found for the number " .$_PUT['driver'] ." !!");
                             }
                         }
                     }
@@ -232,15 +202,11 @@ class CarController extends Controller
                     redirect(url('car/'.$id));
                 }
                 else{
-                    http_response_code(400);
-                    echo "Car Not Found !!";
-                    return;
+                    $this->error_400('Car Not Found !!');
                 }
             }
             else{
-                http_response_code(400);
-                echo "number is required !\n";
-                print_r($_POST);
+                $this->error_400('number field is required !');
             }
         }
         if($_SERVER['REQUEST_METHOD'] === 'DELETE'){
@@ -248,13 +214,10 @@ class CarController extends Controller
                 $driver_del = new Car($id);
                 $driver_del->driver = null;
                 $driver_del->save();
-                http_response_code(200);
-                echo "Record of driver with Car number $id deleted successfully.";
+                $this->response("Record of driver with Car number $id deleted successfully.");
             }
             else{
-                http_response_code(400);
-                echo "Id field is required !\n";
-                // print_r($_GET);
+                $this->error_400('Id field is required !!');
             }
         }
     }
@@ -284,6 +247,9 @@ class CarController extends Controller
                         else{
                             $suitability = $car->skills()->first()->$trackType;
                             $driver_skill = $car->drivers()->first()->$trackType;
+                            if(!$driver_skill){
+                                $this->error_418(" I'm a Teapot.");                                
+                            }
                             $reliability_factor = 100 - (int)$car->reliability;
                             $speed = ((int)$suitability + (int)$driver_skill + $reliability_factor)/3;
                             $lap_time = number_format($baseLapTime + 10 * $speed/100,1);
@@ -296,20 +262,15 @@ class CarController extends Controller
                         $this->response($result);
                     }
                     else{
-                        http_response_code(400);
-                        echo "baseLapTime and trackType fields are required !\n";
-                        return;
+                        $this->error_400('baseLapTime and trackType fields are required. !!');
                     }
                 }
                 else{
-                    http_response_code(400);
-                    echo "Car Not Found !!";
-                    return;
+                    $this->error_400('Car Not Found !!');
                 }
             }
             else{
-                http_response_code(400);
-                echo "Id field is required !\n";
+                $this->error_400('Id field is required.');
             }
         }
     }
