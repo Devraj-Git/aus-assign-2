@@ -22,8 +22,7 @@ class TrackController extends Controller
                     $this->response($car);
                 }
                 else{
-                    http_response_code(404);
-                    echo "Record with car number $id Not Found !!";
+                    $this->error_400('Record with car number'. $id .'Not Found !!');
                 }
             }
             else{
@@ -39,33 +38,25 @@ class TrackController extends Controller
                     $track->type = $_POST['type'];
                 }
                 else{
-                    http_response_code(400);
-                    echo "The Track type must be either 'race' or 'street'. ";
-                    return;
+                    $this->error_400("The Track type must be either 'race' or 'street'. ");
                 }
                 $track->name = $_POST['name'];
                 $track->laps = $_POST['laps'];
                 $track->baseLapTime = $_POST['baseLapTime'];
                 $track->save();
-                http_response_code(200);
                 redirect(url('track/'.$track->id));
             }       
             else{
-                http_response_code(400);
-                echo "All fields are required !\n-------------------------\n";
-                print_r($_POST);
+                $this->error_400("All fields are required !");
             }
         }
         if($_SERVER['REQUEST_METHOD'] === 'DELETE'){
             if($id){
                 (new Track($id))->delete();
-                http_response_code(200);
-                echo "Record with Track id $id deleted successfully.";
+                $this->response("Record with Track id $id deleted successfully.");
             }
             else{
-                http_response_code(400);
-                echo "Id field is required !\n";
-                // print_r($_GET);
+                $this->error_400("Id field is required !");
             }
         }
     }
@@ -79,13 +70,11 @@ class TrackController extends Controller
                     $this->response($race);
                 }
                 else{
-                    http_response_code(404);
-                    echo "Record with Driver number $id Not Found !!";
+                    $this->error_400("Record with Driver number $id Not Found !!");
                 }
             }
             else{
-                http_response_code(400);
-                echo "id field is required !\n";
+                $this->error_400("id field is required !\n");
             }
         }
         if($_SERVER['REQUEST_METHOD'] === 'POST'){
@@ -99,15 +88,11 @@ class TrackController extends Controller
                     redirect(url('race/'.$race->id));
                 }
                 else{
-                    http_response_code(400);
-                    echo "Record with Track id $id Not Found !!";
-                    print_r($_POST);
+                    $this->error_400("Record with Track id $id Not Found !!");
                 }
             }       
             else{
-                http_response_code(400);
-                echo "Track Id fields is required !\n-------------------------\n";
-                print_r($_POST);
+                $this->error_400("Track Id fields is required !");
             }
         }
     }
@@ -119,8 +104,7 @@ class TrackController extends Controller
               echo "Do it later !!";
             }
             else{
-                http_response_code(400);
-                echo "Id field is required !\n";
+                $this->error_400("Id field is required !");
             }
         }
     }

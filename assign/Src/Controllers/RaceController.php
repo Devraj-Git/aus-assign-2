@@ -25,9 +25,7 @@ class RaceController extends Controller
                     }
                 }
                 else{
-                    http_response_code(404);
-                    echo "Record with Race number $id Not Found !!";
-                    return;
+                    $this->error_400("Record with Race number $id Not Found !!");
                 }
             }
             else{
@@ -51,30 +49,16 @@ class RaceController extends Controller
                     $this->response(json_decode($Race->entrants, true));
                 }
                 else{
-                    http_response_code(404);
-                    echo "Record with Race id $id Not Found !!";
+                    $this->error_400("Record with Race $id Not Found !!");
                 }
             }
             else{
-                http_response_code(400);
-                echo "id field is required !\n";
+                $this->error_400("id field is required !");
             }
         }
         if($_SERVER['REQUEST_METHOD'] === 'POST'){
             if (isset($_POST['Car_URI'])){
                 $carUri = $_POST['Car_URI'];
-                // if (preg_match('/car\/(\d+)$/', $carUri, $matches)) {
-                //     $carNumber = $matches[1];
-                //     if(!(new Car)->where('id',$carNumber)->first()){
-                //         http_response_code(400);
-                //         echo "Record with Car id $carNumber Not Found !!";
-                //         return;
-                //     }
-                // } else {
-                //     http_response_code(400);
-                //     echo "The Car_URI should end with 'car/{number}' pattern.\n";
-                //     return;
-                // }
                 if($id){
                     $Race = (new Race)->where('id',$id)->first();
                     if($Race){
@@ -82,33 +66,23 @@ class RaceController extends Controller
                         if (!in_array($carUri, $currentEntrants)) {
                             $currentEntrants[] = $carUri;
                         } else {
-                            http_response_code(404);
-                            echo "Record with Entrants uri $carUri in Race number $id is already exists !!";
-                            return;
+                            $this->error_400("Record with Entrants uri $carUri in Race number $id is already exists !!");
                         }
                         $Race->entrants = json_encode(array_values($currentEntrants));
                         $Race->save();
-                        http_response_code(200);
                         redirect(url('race/'.$Race->id));
 
                     }
                     else{
-                        http_response_code(404);
-                        echo "Record with Race id $id Not Found !!";
-                        return;
+                        $this->error_400("Record with Race id $id Not Found !!");
                     }               
                 }
                 else{
-                    http_response_code(400);
-                    echo "id field is missing in url !\n";
-                    return;
+                    $this->error_400("id field is missing in url !");
                 }
             }
             else{
-                http_response_code(400);
-                echo "'Car_URI' field is required !\n";
-                print_r($_POST);
-                return;
+                $this->error_400("'Car_URI' field is required !");
             }
         }
         if($_SERVER['REQUEST_METHOD'] === 'DELETE'){
@@ -123,33 +97,23 @@ class RaceController extends Controller
                             $key = array_search($carUri, $currentEntrants);
                             unset($currentEntrants[$key]);
                         } else {
-                            http_response_code(404);
-                            echo "Record with Entrants uri $carUri in Race number $id is not exists !!";
-                            return;
+                            $this->error_400("Record with Entrants uri $carUri in Race number $id is not exists !!");
                         }
                         $Race->entrants = json_encode(array_values($currentEntrants));
                         $Race->save();
-                        http_response_code(200);
                         redirect(url('race/'.$Race->id));
 
                     }
                     else{
-                        http_response_code(404);
-                        echo "Record with Race number $id Not Found !!";
-                        return;
+                        $this->error_404("Record with Race number $id Not Found !!");
                     }               
                 }
                 else{
-                    http_response_code(400);
-                    echo "id field is missing in url !\n";
-                    return;
+                    $this->error_400("id field is missing in url !");
                 }
             }
             else{
-                http_response_code(400);
-                echo "'Car_URI' field is required !\n";
-                print_r($_POST);
-                return;
+                $this->error_400("'Car_URI' field is required !");
             }
         }
     }
@@ -162,9 +126,7 @@ class RaceController extends Controller
                 if($Race){
                     if(empty($Race->startingPositions)){
                         if(empty($Race->entrants)){
-                            http_response_code(404);
-                            echo "No Entrants for Qualify !!";
-                            return;
+                            $this->error_404("No Entrants for Qualify !!");
                         }
                         $currentEntrants =json_decode($Race->entrants, true);
                         $track = (new Track($Race->track))->select('type')->first()->type;
@@ -181,9 +143,7 @@ class RaceController extends Controller
                                         $driver_uri = $entry['driver']['uri'];
                                     }
                                 } else {
-                                    http_response_code(404);
-                                    echo "Response Error From Cars API(Teams) decoding JSON: " . json_last_error_msg();
-                                    return;
+                                    $this->error_404("Response Error From Cars API(Teams) decoding JSON: " . json_last_error_msg(),false);
                                 }
                                 if($driver_uri){
                                     $response_dri = $client->get($driver_uri);
@@ -194,21 +154,15 @@ class RaceController extends Controller
                                             $skill [] = $entry_dri['skill'][$track];
                                         }
                                     } else {
-                                        http_response_code(404);
-                                        echo "Response Error From Driver API(Teams) decoding JSON: " . json_last_error_msg();
-                                        return;
+                                        $this->error_404("Response Error From Driver API(Teams) decoding JSON: " . json_last_error_msg(),false);
                                     }
                                 }
                                 else{
-                                    http_response_code(404);
-                                    echo "driver_uri missing !!";
-                                    return;
+                                    $this->error_404("driver_uri missing !!");
                                 }
                             
                             } catch (\Exception $e) {
-                                http_response_code(404);
-                                echo "Error: " . $e->getMessage();
-                                return;
+                                // $this->error_404("Error: " . $e->getMessage(),false);
                             }
                             
                         }
@@ -224,15 +178,11 @@ class RaceController extends Controller
                         redirect(url('race/'.$id));
                     }
                     else{
-                        http_response_code(404);
-                        echo "The startingPositions have already been populated";
-                        return;
+                        $this->error_404("The startingPositions have already been populated");
                     }
                 }
                 else{
-                    http_response_code(404);
-                    echo "Record with Race id $id Not Found !!";
-                    return;
+                    $this->error_404("Record with Race id $id Not Found !!");
                 }    
             } 
         }
@@ -247,14 +197,11 @@ class RaceController extends Controller
                     $this->response($laps);
                 }
                 else{
-                    http_response_code(404);
-                    echo "Record with Race id $id Not Found !!";
-                    return;
+                    $this->error_404("Record with Race id $id Not Found !!");
                 } 
             }
             else{
-                http_response_code(400);
-                echo "Id field is required !\n";
+                $this->error_400("Id field is required !");
             }
         }
         if($_SERVER['REQUEST_METHOD'] === 'POST'){
@@ -262,9 +209,7 @@ class RaceController extends Controller
                 $Race = (new Race)->where('id',$id)->first();
                 if($Race){
                     if(empty($Race->entrants)){
-                        http_response_code(404);
-                        echo "No Entrants for Qualify !!";
-                        return;
+                        $this->error_404("No Entrants for Qualify !!");
                     }
                     if(!empty($Race->startingPositions)){
                         $find_number = (new Lap)->select('number')->where('race_id',$id)->get();
@@ -299,34 +244,25 @@ class RaceController extends Controller
                                     $lap->crashed = $data['crashed'];
                                     $lap->save();                          
                                 } catch (\Exception $e) {
-                                    http_response_code(404);
-                                    echo "Error: " . $e->getMessage();
-                                    return;
+                                    // $this->error_404("Error: " . $e->getMessage(),false);
                                 }
                                 $entrant += 1;
                             }
                         }
                         else{
-                            http_response_code(404);
-                            echo "Laps have been Completed.";
-                            return;
+                            $this->error_404("Laps have been Completed.");
                         }
                     }
                     else{
-                        http_response_code(404);
-                        echo "The startingPositions have not been populated yet.";
-                        return;
+                        $this->error_404("The startingPositions have not been populated yet.");
                     }
                 }
                 else{
-                    http_response_code(404);
-                    echo "Record with Race id $id Not Found !!";
-                    return;
+                    $this->error_404("Record with Race id $id Not Found !!");
                 } 
             }
             else{
-                http_response_code(400);
-                echo "Id field is required !\n";
+                $this->error_400("Id field is required !");
             }
         }
     }
@@ -376,9 +312,7 @@ class RaceController extends Controller
                             ];
                         
                         } catch (\Exception $e) {
-                            http_response_code(404);
-                            echo "Error: " . $e->getMessage();
-                            return;
+                            // $this->error_404("Error: " . $e->getMessage(),false);
                         }
                         $entrant += 1;
 
@@ -403,15 +337,11 @@ class RaceController extends Controller
                     $this->response($formatted_output);               
                 }
                 else{
-                    http_response_code(404);
-                    echo "Record with Race id $id Not Found !!";
-                    return;
+                    $this->error_404("Record with Race id $id Not Found !!");
                 }
             }
             else{
-                http_response_code(400);
-                echo "Id field is required !\n";
-                return;
+                $this->error_400("Id field is required !");
             }
 
         }

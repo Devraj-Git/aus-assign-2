@@ -58,7 +58,7 @@ class Controller
         return;
     }
 
-    protected function error_404($data)
+    protected function error_404($data,$bool=true)
     {
         header('Content-Type: application/json');
         http_response_code(404);
@@ -67,7 +67,9 @@ class Controller
             "result" => $data
         ];
         echo json_encode($response, JSON_UNESCAPED_SLASHES);
-        return;
+        if($bool){
+            return;
+        }
     }
 
     protected function error_418($data)
