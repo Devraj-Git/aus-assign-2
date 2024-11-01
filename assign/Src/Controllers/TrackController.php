@@ -10,6 +10,9 @@ use App\Models\Track;
 
 class TrackController extends Controller
 {
+    public function __construct() {
+        $this->checkAuth();
+    }
     public function index($id=null)
     {
         if($_SERVER['REQUEST_METHOD'] === 'GET'){

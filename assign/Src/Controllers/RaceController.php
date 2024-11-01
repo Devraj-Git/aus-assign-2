@@ -11,6 +11,9 @@ use GuzzleHttp\Exception\GuzzleException;
 
 class RaceController extends Controller
 {
+    public function __construct() {
+        $this->checkAuth();
+    }
     public function index($id=null)
     {
         if($_SERVER['REQUEST_METHOD'] === 'GET'){
@@ -171,7 +174,7 @@ class RaceController extends Controller
                             try {
                                 $response = $client->get($cars);
                                 $body = $response->getBody()->getContents();
-                                $data = json_decode($body, true);
+                                $data = json_decode($body, true)['result'];
                                 $driver_uri = null;
                                 if (json_last_error() === JSON_ERROR_NONE) {
                                     foreach ($data as $entry) {
@@ -185,7 +188,7 @@ class RaceController extends Controller
                                 if($driver_uri){
                                     $response_dri = $client->get($driver_uri);
                                     $body_dri = $response_dri->getBody()->getContents();
-                                    $data_dri = json_decode($body_dri, true);
+                                    $data_dri = json_decode($body_dri, true)['result'];
                                     if (json_last_error() === JSON_ERROR_NONE) {
                                         foreach ($data_dri as $entry_dri) {
                                             $skill [] = $entry_dri['skill'][$track];
@@ -286,7 +289,7 @@ class RaceController extends Controller
                                         ]
                                     ]);
                                     $body = $response->getBody()->getContents();
-                                    $data = json_decode($body, true);
+                                    $data = json_decode($body, true)['result'];
                                     
                                     $lap = new Lap;                                
                                     $lap->race_id = $id;
@@ -343,12 +346,12 @@ class RaceController extends Controller
                         try {
                             $response = $client->get($cars);
                             $body = $response->getBody()->getContents();
-                            $data = json_decode($body, true);
+                            $data = json_decode($body, true)['result'];
 
                             $driver_uri = $data[0]['driver']['uri'];
                             $response_dri = $client->get($driver_uri);
                             $body_dri = $response_dri->getBody()->getContents();
-                            $data_dri = json_decode($body_dri, true);
+                            $data_dri = json_decode($body_dri, true)['result'];
 
                             $startingPositions =json_decode($Race->startingPositions, true);
                             $time = $startingPositions[$entrant]*5;
@@ -388,7 +391,7 @@ class RaceController extends Controller
                     });
                     if($number){
                         $formatted_output = [
-                            "lap" => 3,
+                            "lap" => $number,
                             "entrants" => $entrants_output
                         ];
                     }
