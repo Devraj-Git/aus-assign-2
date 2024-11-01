@@ -23,6 +23,27 @@ class RaceController extends Controller
                     if (isset($Race->entrants) && is_string($Race->entrants)) {
                         $Race->entrants = json_decode($Race->entrants);
                     }
+                    $Race->track = [
+                        "name" => $Race->tracks()->first()->name,
+                        "uri" => url("track/".$Race->tracks()->first()->id),
+                    ];
+                    $laps = $Race->laps()->get();
+                    $groupedLaps = array_reduce($laps, function ($result, $lap) {
+                        $lapNumber = (int)$lap->number;
+                        if (!isset($result[$lapNumber])) {
+                            $result[$lapNumber] = [
+                                "number" => $lapNumber,
+                                "lapTimes" => []
+                            ];
+                        }
+                        $result[$lapNumber]["lapTimes"][] = [
+                            "entrant" => (int)$lap->entrant,
+                            "time" => (int)$lap->time,
+                            "crashed" => filter_var($lap->crashed, FILTER_VALIDATE_BOOLEAN)
+                        ];
+                        return $result;
+                    }, []);
+                    $Race->laps= array_values($groupedLaps);
                 }
                 else{
                     $this->error_400("Record with Race number $id Not Found !!");
@@ -34,6 +55,28 @@ class RaceController extends Controller
                     if (isset($rac->entrants) && is_string($rac->entrants)) {
                         $rac->entrants = json_decode($rac->entrants);
                     }
+                    $rac->track = [
+                        "name" => $rac->tracks()->first()->name,
+                        "uri" => url("track/".$rac->tracks()->first()->id),
+                    ];
+
+                    $laps = $rac->laps()->get();
+                    $groupedLaps = array_reduce($laps, function ($result, $lap) {
+                        $lapNumber = $lap->number;
+                        if (!isset($result[$lapNumber])) {
+                            $result[$lapNumber] = [
+                                "number" => $lapNumber,
+                                "lapTimes" => []
+                            ];
+                        }
+                        $result[$lapNumber]["lapTimes"][] = [
+                            "entrant" => $lap->entrant,
+                            "time" => $lap->time,
+                            "crashed" => $lap->crashed
+                        ];
+                        return $result;
+                    }, []);
+                    $rac->laps= array_values($groupedLaps);
                 }
             }
             $this->response($Race);
