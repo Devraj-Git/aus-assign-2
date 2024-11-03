@@ -14,6 +14,14 @@ class ComposerStaticInitb61f4fac691d359b8eae38c7f2770b3a
     );
 
     public static $prefixLengthsPsr4 = array (
+        'm' => 
+        array (
+            'mikehaertl\\shellcommand\\' => 24,
+        ),
+        'd' => 
+        array (
+            'daandesmedt\\PHPHeadlessChrome\\' => 30,
+        ),
         'P' => 
         array (
             'Psr\\Http\\Message\\' => 17,
@@ -32,6 +40,14 @@ class ComposerStaticInitb61f4fac691d359b8eae38c7f2770b3a
     );
 
     public static $prefixDirsPsr4 = array (
+        'mikehaertl\\shellcommand\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/mikehaertl/php-shellcommand/src',
+        ),
+        'daandesmedt\\PHPHeadlessChrome\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/daandesmedt/phpheadlesschrome/src',
+        ),
         'Psr\\Http\\Message\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/http-factory/src',

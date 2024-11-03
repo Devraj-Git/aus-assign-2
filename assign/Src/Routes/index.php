@@ -8,13 +8,13 @@ use App\System\Core\Router;
 $router = new Router();
 
 $router->get('/track', TrackController::class, 'index');
+$router->get('/track/scrape', TrackController::class, 'scrape');
 $router->get('/track/{id}', TrackController::class, 'index');
 $router->post('/track', TrackController::class, 'index');
 $router->delete('/track/{id}', TrackController::class, 'index');
 $router->get('/track/{id}/races', TrackController::class, 'track_races');
 $router->post('/track/{id}/races', TrackController::class, 'track_races');
 
-$router->get('/track/scrape', TrackController::class, 'scrape');
 
 
 

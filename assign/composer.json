@@ -9,6 +9,7 @@
         ]
     },
     "require": {
-        "guzzlehttp/guzzle": "^7.9"
+        "guzzlehttp/guzzle": "^7.9",
+        "daandesmedt/phpheadlesschrome": "^1.1"
     }
 }
